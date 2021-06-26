@@ -1,8 +1,94 @@
 {% extends 'store/basic.html' %}
 
-{% block title %}"ABOUT US"{% endblock %}
+{% block title %}"Order status"{% endblock %}
 {% block css %}<style>
-  
+
 </style>{% endblock %}
 
-{% block body %} <h1> hello</h1>{% endblock %}
+{% block body %}
+<div class="container">
+
+    <div class="col my-4">
+        <h2>Enter Order Details to get your order status</h2>
+        <form class="row g-3" method="post" id="trackerForm">
+            {% csrf_token %}
+            <div class="col-md-7 my-2">
+                <label for="inputName4" class="form-label">Order ID</label>
+                <input type="text" class="form-control" id="orderId" name="orderId">
+            </div>
+            <div class="col-md-7 my-2">
+                <label for="inputPhone4" class="form-label">Enter Your Phone Number</label>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone number provided while ordering the item">
+            </div>
+            <div class="col-12 my-2">
+                <button type="submit" class="btn btn-primary">Track Order</button>
+            </div>
+        </form>
+    </div>
+
+    <div>
+        <h3>Order Status</h3>
+        <ul class="list-group" id="items">
+        </ul>
+    </div>
+    <div>
+        <h3>Order Details</h3>
+        <ul class="list-group" id="citems">
+        </ul>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $('#trackerForm').submit(function (event) {
+        $('#items').empty();
+        var formData = {
+            'orderId': $('input[name=orderId]').val(),
+            'phone': $('input[name=phone]').val(),
+            'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+        };
+        $.ajax({
+            type: 'POST',
+            url: '/store/tracker/',
+            data: formData,
+            encode: true,
+        })
+            .done(function (data) {
+                $('#citems').empty();
+                data = JSON.parse(data)
+
+                if (data['status'] == 'success') {
+                    updates = data['updates'];
+                    for (i = 0; i < updates.length; i++) {
+                        let text = updates[i]['text'];
+                        let time = updates[i]['time'];
+                        mystr = `<li class="list-group-item d-flex justify-content-between align-items-start">
+            ${text}
+            <span class="badge bg-primary rounded-pill">${time}</span>
+          </li>`
+                        $('#items').append(mystr);
+                    }
+                    cart = JSON.parse(data['itemsJson']);
+                    for (item in cart) {
+                        let name = cart[item][1];
+                        let qty = cart[item][0];
+                        let product_id = cart[item][3]
+            
+                        mystr = `<a href="/store/product/${product_id}"><li class="list-group-item d-flex justify-content-between align-items-start">
+                    ${name}</a> 
+                    <span class="badge bg-primary rounded-pill">${qty}</span>
+                  </li>`
+                        $('#citems').append(mystr);
+                    }
+                } else {
+                    mystr = `<li class="list-group-item d-flex justify-content-between align-items-start">
+            Sorry !! We were unable to fetch details please check if the orderID and phone number exists.
+          </li>`
+                    $('#items').append(mystr);
+                }
+
+            });
+        event.preventDefault();
+    });
+</script>
+{% endblock %}

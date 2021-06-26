@@ -1,8 +1,144 @@
 {% extends 'store/basic.html' %}
 
-{% block title %}"ABOUT US"{% endblock %}
+{% block title %}"Checkout"{% endblock %}
 {% block css %}<style>
-  
+
 </style>{% endblock %}
 
-{% block body %} <h1> hello</h1>{% endblock %}
+{% block body %}
+{% if user.is_authenticated %}
+<div class="container">
+    <h2>Checkout - Review your cart items</h2>
+    <div>
+        <ul class="list-group" id="items">
+            <!-- <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">Subheading</div>
+                Cras justo odio
+              </div>
+              <span class="badge bg-primary rounded-pill">14</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">Subheading</div>
+                Cras justo odio
+              </div>
+              <span class="badge bg-primary rounded-pill">14</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">Subheading</div>
+                Cras justo odio
+              </div>
+              <span class="badge bg-primary rounded-pill">14</span>
+            </li> -->
+        </ul>
+        <nav aria-label="breadcrumb">
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">
+                   Your cart total amount is <span id="totalPrice" class="ml-auto"></span> Rs
+                </li>
+            </ul>
+        </nav>
+        
+    </div>
+    <div class="col my-4">
+        <h2>Addresss Particulars</h2>
+        <form class="row g-3" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="items_Json" id="itemsJson">
+            <input type="hidden" name="amount" id="amount">
+            <div class="col-md-12 my-2">
+                <label for="inputName4" class="form-label">Enter Your Name</label>
+                <input type="text" class="form-control" id="name" name="name">
+            </div>
+            <div class="row  mx-auto">
+            <div class="col-md-6 my-2">
+                <label for="inputPhone4" class="form-label">Enter Your Phone Number</label>
+                <input type="phone" class="form-control" id="phone1" name="phone1">
+            </div>
+            <div class="col-md-6 my-2">
+                <label for="email" class="form-label">Email-ID</label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+        </div>
+            <div class="col-12 my-2">
+                <label for="inputAddress" class="form-label">Address</label>
+                <input type="text" class="form-control" id="address1" name="address1" placeholder="1234 Main St">
+            </div>
+            <div class="col-12 my-2">
+                <label for="inputAddress2" class="form-label">Address Line 2</label>
+                <input type="text" class="form-control" id="address2" name="address2" placeholder="Apartment, studio, or floor">
+            </div>
+            <div class="row mx-1">
+            <div class="col-md-4 my-2">
+                <label for="inputCity" class="form-label">City</label>
+                <input type="text" class="form-control" id="city" name="city">
+            </div>
+            
+            <div class="col-md-4 my-2">
+                <label for="inputState" class="form-label">State</label>
+                <input type="text" class="form-control" id="state" name="state"> 
+
+            </div>
+            <div class="col-md-4 my-2">
+                <label for="inputZip" class="form-label">Zip</label>
+                <input type="text" class="form-control" id="zip" name="zip">
+            </div>
+            <div class="col-12 my-2">
+                <button type="submit" class="btn btn-primary">Place Order</button>
+            </div></div>
+        </form>
+    </div>
+</div>
+{% else %}
+<ul class="text-center my-5">
+    <h5>Please Login to proceed for checkout</h5>
+    <button type="button" class="btn btn-primary mx-2" data-toggle="modal" data-target="#loginModal">
+      Login
+    </button>
+  </ul>
+{% endif %}
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+
+    if (localStorage.getItem('cart') == null) {
+        var cart = {};
+    }
+    else {
+        cart = JSON.parse(localStorage.getItem('cart'));
+    }
+    var sum=0;
+    var totalPrice=0;
+    if ($.isEmptyObject(cart)){
+       mystr = `<b><p class="mx-3 my-2">Feels so lightweight , Please add some items !!<p><b>`
+       $('#items').append(mystr);
+    }
+    else{
+    for (item in cart) {
+        let name = cart[item][1];
+        let qty = cart[item][0];
+        let itemPrice = cart[item][2];
+        let product_id= cart[item][3]
+        sum = sum +qty;
+        totalPrice = totalPrice + qty*itemPrice;
+        mystr = `<a href="/store/product/${product_id}"><li class="list-group-item d-flex justify-content-between align-items-start">
+            ${name}</a>
+            <span class="badge bg-primary rounded-pill">${qty}</span>
+          </li>`
+        $('#items').append(mystr);
+    }
+
+}
+    document.getElementById('cart').innerHTML =sum;
+    document.getElementById('totalPrice').innerHTML =totalPrice;
+    $('#itemsJson').val(JSON.stringify(cart));
+{% if thank %}
+    alert('Thanks for shopping with us , Your orderID is{{id}}. Keep it for further use');
+    localStorage.clear();
+    document.location="/store";
+{% endif %}
+$('#amount').val($('#totalPrice').html());
+</script>
+{% endblock %}
